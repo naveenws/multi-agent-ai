@@ -93,42 +93,44 @@ const Dashboard = () => {
                 {recentTasks.length === 0 ? (
                     <div className="p-8 text-center text-gray-500 italic">No execution history yet. Run your first task to generate real performance data.</div>
                 ) : (
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="bg-gray-800/50 border-b border-gray-800 text-gray-400 text-sm">
-                                <th className="p-4 font-medium">Task</th>
-                                <th className="p-4 font-medium">Type</th>
-                                <th className="p-4 font-medium">Agents Used</th>
-                                <th className="p-4 font-medium">Latency</th>
-                                <th className="p-4 font-medium">Quality</th>
-                                <th className="p-4 font-medium">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody className="text-sm">
-                            {recentTasks.map((task: any) => (
-                                <tr key={task.id} className="border-b border-gray-800/50 hover:bg-gray-800/20">
-                                    <td className="p-4 truncate max-w-[200px] text-gray-200" title={task.prompt}>{task.prompt}</td>
-                                    <td className="p-4 text-gray-400">{task.type}</td>
-                                    <td className="p-4 text-gray-400">{task.agents_used.join(', ')}</td>
-                                    <td className="p-4 text-gray-400">{task.latency ? `${task.latency.toFixed(2)}s` : '-'}</td>
-                                    <td className="p-4">
-                                        {task.quality !== null ? (
-                                            <span className={task.quality >= 0.75 ? "text-green-400" : "text-amber-400"}>{task.quality.toFixed(2)}</span>
-                                        ) : '-'}
-                                    </td>
-                                    <td className="p-4">
-                                        <span className={`px-2 py-1 rounded text-xs font-medium ${
-                                            task.status === 'completed' ? 'bg-green-500/10 text-green-400' :
-                                            task.status === 'failed' ? 'bg-red-500/10 text-red-400' :
-                                            'bg-blue-500/10 text-blue-400'
-                                        }`}>
-                                            {task.status}
-                                        </span>
-                                    </td>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse whitespace-nowrap min-w-[600px]">
+                            <thead>
+                                <tr className="bg-gray-800/50 border-b border-gray-800 text-gray-400 text-sm">
+                                    <th className="p-4 font-medium">Task</th>
+                                    <th className="p-4 font-medium">Type</th>
+                                    <th className="p-4 font-medium">Agents Used</th>
+                                    <th className="p-4 font-medium">Latency</th>
+                                    <th className="p-4 font-medium">Quality</th>
+                                    <th className="p-4 font-medium">Status</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody className="text-sm">
+                                {recentTasks.map((task: any) => (
+                                    <tr key={task.id} className="border-b border-gray-800/50 hover:bg-gray-800/20">
+                                        <td className="p-4 truncate max-w-[150px] md:max-w-[200px] text-gray-200" title={task.prompt}>{task.prompt}</td>
+                                        <td className="p-4 text-gray-400">{task.type}</td>
+                                        <td className="p-4 text-gray-400">{task.agents_used.join(', ')}</td>
+                                        <td className="p-4 text-gray-400">{task.latency ? `${task.latency.toFixed(2)}s` : '-'}</td>
+                                        <td className="p-4">
+                                            {task.quality !== null ? (
+                                                <span className={task.quality >= 0.75 ? "text-green-400" : "text-amber-400"}>{task.quality.toFixed(2)}</span>
+                                            ) : '-'}
+                                        </td>
+                                        <td className="p-4">
+                                            <span className={`px-2 py-1 rounded text-xs font-medium ${
+                                                task.status === 'completed' ? 'bg-green-500/10 text-green-400' :
+                                                task.status === 'failed' ? 'bg-red-500/10 text-red-400' :
+                                                'bg-blue-500/10 text-blue-400'
+                                            }`}>
+                                                {task.status}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 )}
             </div>
         </div>

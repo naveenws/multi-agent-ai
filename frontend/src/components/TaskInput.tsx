@@ -9,21 +9,35 @@ const TaskInput = () => {
     const [result, setResult] = useState<any>(null);
     const [error, setError] = useState('');
 
+    const [loadingMessage, setLoadingMessage] = useState('');
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!prompt.trim()) return;
 
         setLoading(true);
+        setLoadingMessage('Connecting to AI backend...');
         setError('');
         setResult(null);
+
+        // Change loading message after 5 seconds to show it's taking a while
+        const timeoutId = setTimeout(() => {
+            setLoadingMessage('Backend is taking longer than expected...');
+        }, 5000);
 
         try {
             const data = await submitTask(prompt);
             setResult(data);
         } catch (err: any) {
-            setError(err.response?.data?.detail || err.message || 'An error occurred');
+            let msg = err.response?.data?.detail || err.message || 'An error occurred';
+            if (msg === 'Network Error') {
+                msg = 'Unable to connect to the server.';
+            }
+            setError(msg);
         } finally {
+            clearTimeout(timeoutId);
             setLoading(false);
+            setLoadingMessage('');
         }
     };
 
@@ -58,6 +72,13 @@ const TaskInput = () => {
                     </div>
                 </div>
             </form>
+
+            {loading && (
+                <div className="flex items-center justify-center gap-3 text-blue-400 mb-6 bg-blue-500/10 p-4 rounded-xl border border-blue-500/20">
+                    <Loader2 className="w-5 h-5 animate-spin shrink-0" />
+                    <span>{loadingMessage}</span>
+                </div>
+            )}
 
             {error && (
                 <div className="bg-red-500/10 border border-red-500/50 text-red-400 p-4 rounded-xl mb-6 flex items-start gap-3">

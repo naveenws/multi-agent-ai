@@ -149,7 +149,7 @@ const AgentManagement = () => {
                         </button>
                         <h2 className="text-2xl font-bold mb-6 text-white">Add New AI Agent</h2>
                         <form onSubmit={handleAddAgent} className="space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-300 mb-1">Agent Name</label>
                                     <input required value={name} onChange={e => setName(e.target.value)} type="text" placeholder="e.g. Advanced Coder" className="w-full bg-gray-800 border border-gray-700 rounded-lg p-2.5 text-white outline-none focus:border-blue-500" />
@@ -166,7 +166,7 @@ const AgentManagement = () => {
                                 </div>
                             </div>
                             
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-300 mb-1">API Key (Optional for Local)</label>
                                     <input value={apiKey} onChange={e => setApiKey(e.target.value)} type="password" placeholder="••••••••••••••••" className="w-full bg-gray-800 border border-gray-700 rounded-lg p-2.5 text-white outline-none focus:border-blue-500" />
