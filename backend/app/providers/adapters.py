@@ -82,7 +82,8 @@ class OpenAIAdapter(BaseProvider):
         try:
             client = self._get_client()
             models = await client.models.list()
-            return [m.id for m in models.data if "gpt" in m.id or "o1" in m.id]
+            # Don't filter by 'gpt', return all available models from the custom provider
+            return [m.id for m in models.data]
         except Exception:
             return ["gpt-4o", "gpt-4o-mini"]
 
@@ -90,10 +91,9 @@ class OpenAIAdapter(BaseProvider):
         start = time.time()
         try:
             client = self._get_client()
-            await client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=[{"role": "user", "content": "Ping."}]
-            )
+            # Just listing models is the safest way to test API key validity
+            # without charging tokens or guessing a model name that might not exist
+            await client.models.list()
             return {"success": True, "latency": time.time() - start, "message": "Connection successful"}
         except Exception as e:
             return {"success": False, "latency": time.time() - start, "message": str(e)}
