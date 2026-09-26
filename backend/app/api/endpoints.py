@@ -238,7 +238,39 @@ def update_agent(agent_id: int, agent_data: dict, session: Session = Depends(get
         
     if "is_active" in agent_data:
         db_agent.is_active = agent_data["is_active"]
+    if "name" in agent_data:
+        db_agent.name = agent_data["name"]
+    if "provider" in agent_data:
+        db_agent.provider = agent_data["provider"]
+    if "model" in agent_data:
+        db_agent.model = agent_data["model"]
         
+    # Update capabilities
+    if "capabilities" in agent_data:
+        for cap in db_agent.capabilities:
+            session.delete(cap)
+        for cap in agent_data["capabilities"]:
+            session.add(AgentCapability(agent_id=db_agent.id, capability_name=cap))
+            
+    # Update credential if provided
+    api_key = agent_data.get("api_key")
+    base_url = agent_data.get("base_url")
+    if api_key or base_url is not None:
+        if db_agent.credential_id:
+            cred = session.get(AgentCredential, db_agent.credential_id)
+            if api_key:
+                cred.encrypted_api_key = encrypt_credential(api_key)
+            if base_url is not None:
+                cred.base_url = base_url
+            session.add(cred)
+        else:
+            encrypted_key = encrypt_credential(api_key) if api_key else None
+            cred = AgentCredential(encrypted_api_key=encrypted_key, base_url=base_url)
+            session.add(cred)
+            session.commit()
+            session.refresh(cred)
+            db_agent.credential_id = cred.id
+            
     session.add(db_agent)
     session.commit()
     return {"message": "Agent updated successfully"}

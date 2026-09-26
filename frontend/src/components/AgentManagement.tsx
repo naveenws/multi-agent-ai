@@ -117,17 +117,11 @@ const AgentManagement = () => {
             const capabilities = capabilitiesStr.split(',').map(c => c.trim()).filter(c => c.length > 0);
             
             if (editingAgentId) {
-                // If editing, we hit the PUT endpoint
-                // Note: our backend PUT endpoint currently only updates is_active!
-                // Let's create a new agent and disable the old one to preserve history, OR we can just tell the user this.
-                // Wait, the backend PUT endpoint ONLY takes is_active!
-                // To properly edit, we must update the backend to accept other fields. 
-                // For now, since we can't easily change the backend without a redeploy, 
-                // the safest approach for "Edit" when preserving history is creating a new one and deleting the old one.
-                await axios.post(`${API_BASE}/agents`, {
-                    name, provider, model, capabilities, api_key: apiKey, base_url: baseUrl, is_active: true
+                // Properly update the agent without destroying its API key
+                await axios.put(`${API_BASE}/agents/${editingAgentId}`, {
+                    name, provider, model, capabilities, base_url: baseUrl, 
+                    ...(apiKey ? { api_key: apiKey } : {}) // Only send API key if user typed a new one
                 });
-                await axios.delete(`${API_BASE}/agents/${editingAgentId}`);
             } else {
                 await axios.post(`${API_BASE}/agents`, {
                     name, provider, model, capabilities, api_key: apiKey, base_url: baseUrl, is_active: true
