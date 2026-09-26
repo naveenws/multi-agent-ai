@@ -7,6 +7,10 @@ load_dotenv()
 # We'll use sqlite for local development if postgres isn't running to make testing easier without docker
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./multiagent.db")
 
+# Fix for Render's default postgres:// URLs for SQLAlchemy
+if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
 connect_args = {}
 if DATABASE_URL.startswith("sqlite"):
     connect_args = {"check_same_thread": False}
@@ -14,8 +18,14 @@ if DATABASE_URL.startswith("sqlite"):
 engine = create_engine(DATABASE_URL, echo=False, connect_args=connect_args)
 
 def create_db_and_tables():
-    from app.models.core import User, Agent, AgentCapability, Task, TaskStep, AgentExecution, Evaluation, AgentFailure, FinalResponse
-    SQLModel.metadata.create_all(engine)
+    from app.models.core import User, AgentCredential, Agent, AgentCapability, Task, TaskStep, AgentExecution, Evaluation, AgentFailure, FinalResponse
+    try:
+        SQLModel.metadata.create_all(engine)
+        print("Database initialized successfully.")
+    except Exception as e:
+        print(f"Database initialization failed: {e}")
+        # Re-raise so the app knows it can't start if the DB is required
+        raise e
     
     with Session(engine) as session:
         # Check if agents exist

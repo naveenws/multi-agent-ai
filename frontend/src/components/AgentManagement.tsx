@@ -59,7 +59,7 @@ const AgentManagement = () => {
     const handleFetchModels = async (prov: string, key: string, url: string) => {
         setIsFetchingModels(true);
         try {
-            const res = await axios.post('http://127.0.0.1:8000/api/providers/models', {
+            const res = await axios.post(`${API_BASE}/providers/models`, {
                 provider: prov,
                 api_key: key,
                 base_url: url
@@ -79,7 +79,7 @@ const AgentManagement = () => {
         setIsTesting(true);
         setTestResult(null);
         try {
-            const res = await axios.post('http://127.0.0.1:8000/api/providers/test', {
+            const res = await axios.post(`${API_BASE}/providers/test`, {
                 provider,
                 api_key: apiKey,
                 base_url: baseUrl
@@ -95,9 +95,11 @@ const AgentManagement = () => {
         }
     };
 
+    const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+    
     const toggleAgentStatus = async (agent: any) => {
         try {
-            await axios.put(`http://127.0.0.1:8000/api/agents/${agent.id}`, {
+            await axios.put(`${API_BASE}/agents/${agent.id}`, {
                 is_active: !agent.is_active
             });
             fetchAgents();
@@ -110,7 +112,7 @@ const AgentManagement = () => {
         e.preventDefault();
         try {
             const capabilities = capabilitiesStr.split(',').map(c => c.trim()).filter(c => c.length > 0);
-            await axios.post('http://127.0.0.1:8000/api/agents', {
+            await axios.post(`${API_BASE}/agents`, {
                 name,
                 provider,
                 model,
