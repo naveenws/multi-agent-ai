@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { getAgents } from '../services/api';
-import { Settings, Edit2, Power, X, Loader2, CheckCircle, XCircle } from 'lucide-react';
+import { Edit2, Power, X, Loader2, CheckCircle, XCircle } from 'lucide-react';
 import axios from 'axios';
 
 const AgentManagement = () => {

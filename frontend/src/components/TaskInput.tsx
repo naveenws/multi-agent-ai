@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Send, FileText, Loader2, Bot, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { Send, FileText, Loader2, Bot, AlertTriangle } from 'lucide-react';
 import { submitTask } from '../services/api';
 import ExecutionTrace from './ExecutionTrace';
 

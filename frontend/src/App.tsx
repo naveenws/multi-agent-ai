@@ -1,4 +1,3 @@
-import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { Activity, BrainCircuit, LayoutDashboard, Settings } from 'lucide-react';
 import TaskInput from './components/TaskInput';

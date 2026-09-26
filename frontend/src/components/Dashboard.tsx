@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { getStatistics, getAgents, getRecentExecutions } from '../services/api';
-import { Activity, CheckCircle, XCircle, Clock, Zap } from 'lucide-react';
+import { Activity, CheckCircle, Clock, Zap } from 'lucide-react';
 
 const StatCard = ({ title, value, icon: Icon, colorClass }: any) => (
   <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 flex items-center justify-between">

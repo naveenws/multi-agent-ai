@@ -1,5 +1,4 @@
-import React from 'react';
-import { CheckCircle2, Circle, AlertCircle, RefreshCw, ChevronRight } from 'lucide-react';
+import { CheckCircle2, AlertCircle, RefreshCw, ChevronRight } from 'lucide-react';
 
 const ExecutionTrace = ({ trace }: { trace: any[] }) => {
     return (
