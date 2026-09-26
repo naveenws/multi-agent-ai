@@ -23,7 +23,10 @@ from sqlalchemy.sql import text
 FRONTEND_URL = os.getenv("FRONTEND_URL")
 origins = [
     "http://localhost:5173",
-    "http://127.0.0.1:5173"
+    "http://127.0.0.1:5173",
+    "http://localhost",       # Capacitor Android
+    "capacitor://localhost",  # Capacitor iOS
+    "ionic://localhost"
 ]
 if FRONTEND_URL:
     origins.append(FRONTEND_URL)
