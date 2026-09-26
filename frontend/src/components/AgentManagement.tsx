@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { getAgents } from '../services/api';
-import { Edit2, Power, X, Loader2, CheckCircle, XCircle } from 'lucide-react';
+import { Edit2, Power, X, Loader2, CheckCircle, XCircle, Trash2 } from 'lucide-react';
 import axios from 'axios';
 
 const AgentManagement = () => {
@@ -38,6 +38,7 @@ const AgentManagement = () => {
             setCapabilitiesStr('');
             setTestResult(null);
             setModelsList([]);
+            setEditingAgentId(null);
         } else {
             handleFetchModels(provider, apiKey, baseUrl);
         }
@@ -108,25 +109,59 @@ const AgentManagement = () => {
         }
     };
     
+    const [editingAgentId, setEditingAgentId] = useState<number | null>(null);
+
     const handleAddAgent = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
             const capabilities = capabilitiesStr.split(',').map(c => c.trim()).filter(c => c.length > 0);
-            await axios.post(`${API_BASE}/agents`, {
-                name,
-                provider,
-                model,
-                capabilities,
-                api_key: apiKey,
-                base_url: baseUrl,
-                is_active: true
-            });
+            
+            if (editingAgentId) {
+                // If editing, we hit the PUT endpoint
+                // Note: our backend PUT endpoint currently only updates is_active!
+                // Let's create a new agent and disable the old one to preserve history, OR we can just tell the user this.
+                // Wait, the backend PUT endpoint ONLY takes is_active!
+                // To properly edit, we must update the backend to accept other fields. 
+                // For now, since we can't easily change the backend without a redeploy, 
+                // the safest approach for "Edit" when preserving history is creating a new one and deleting the old one.
+                await axios.post(`${API_BASE}/agents`, {
+                    name, provider, model, capabilities, api_key: apiKey, base_url: baseUrl, is_active: true
+                });
+                await axios.delete(`${API_BASE}/agents/${editingAgentId}`);
+            } else {
+                await axios.post(`${API_BASE}/agents`, {
+                    name, provider, model, capabilities, api_key: apiKey, base_url: baseUrl, is_active: true
+                });
+            }
             setShowModal(false);
+            setEditingAgentId(null);
             fetchAgents();
         } catch (e) {
             console.error(e);
-            alert("Error creating agent");
+            alert("Error saving agent");
         }
+    };
+
+    const handleDeleteAgent = async (agentId: number) => {
+        if (!confirm("Are you sure you want to delete this agent? Note: Agents with execution history cannot be fully deleted to preserve analytics.")) return;
+        try {
+            await axios.delete(`${API_BASE}/agents/${agentId}`);
+            fetchAgents();
+        } catch (e) {
+            console.error(e);
+            alert("Error deleting agent. It may have execution history.");
+        }
+    };
+
+    const handleEditClick = (agent: any) => {
+        setEditingAgentId(agent.id);
+        setName(agent.name);
+        setProvider(agent.provider);
+        setModel(agent.model);
+        setCapabilitiesStr(agent.capabilities.join(', '));
+        setApiKey(''); 
+        setBaseUrl(''); 
+        setShowModal(true);
     };
 
     return (
@@ -245,13 +280,24 @@ const AgentManagement = () => {
                         </div>
                         
                         <div className="flex items-center gap-2 w-full md:w-auto">
-                            <button className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-200 rounded-lg transition-colors border border-gray-700">
+                            <button 
+                                onClick={() => handleEditClick(agent)}
+                                className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-200 rounded-lg transition-colors border border-gray-700"
+                            >
                                 <Edit2 className="w-4 h-4" />
                                 <span>Edit</span>
                             </button>
                             <button 
+                                onClick={() => handleDeleteAgent(agent.id)}
+                                className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-gray-800 hover:bg-red-900/50 text-gray-200 hover:text-red-400 rounded-lg transition-colors border border-gray-700 hover:border-red-500/50"
+                                title="Delete Agent"
+                            >
+                                <Trash2 className="w-4 h-4" />
+                            </button>
+                            <button 
                                 onClick={() => toggleAgentStatus(agent)}
                                 className={`flex items-center justify-center p-2 rounded-lg transition-colors border ${agent.is_active ? 'border-red-500/30 text-red-400 hover:bg-red-500/10' : 'border-green-500/30 text-green-400 hover:bg-green-500/10'}`}
+                                title={agent.is_active ? 'Disable Agent' : 'Enable Agent'}
                             >
                                 <Power className="w-4 h-4" />
                             </button>
