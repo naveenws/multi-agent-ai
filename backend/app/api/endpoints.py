@@ -177,6 +177,56 @@ from app.models.core import AgentCapability, AgentCredential
 from app.core.security import encrypt_credential
 from app.providers.adapters import get_adapter
 
+@router.get("/providers")
+def get_supported_providers():
+    return {
+        "providers": [
+            {
+                "id": "openai",
+                "name": "OpenAI",
+                "requires_api_key": True,
+                "requires_base_url": False
+            },
+            {
+                "id": "gemini",
+                "name": "Google Gemini",
+                "requires_api_key": True,
+                "requires_base_url": False
+            },
+            {
+                "id": "anthropic",
+                "name": "Anthropic",
+                "requires_api_key": True,
+                "requires_base_url": False
+            },
+            {
+                "id": "openrouter",
+                "name": "OpenRouter",
+                "requires_api_key": True,
+                "requires_base_url": False
+            },
+            {
+                "id": "groq",
+                "name": "Groq",
+                "requires_api_key": True,
+                "requires_base_url": False
+            },
+            {
+                "id": "ollama",
+                "name": "Ollama (Local)",
+                "requires_api_key": False,
+                "requires_base_url": True,
+                "default_base_url": "http://localhost:11434"
+            },
+            {
+                "id": "custom",
+                "name": "Custom OpenAI-Compatible",
+                "requires_api_key": True,
+                "requires_base_url": True
+            }
+        ]
+    }
+
 @router.post("/providers/test")
 async def test_provider_connection(data: dict):
     provider_name = data.get("provider", "")

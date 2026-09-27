@@ -19,6 +19,8 @@ const AgentManagement = () => {
     const [isTesting, setIsTesting] = useState(false);
     const [testResult, setTestResult] = useState<any>(null);
     const [isFetchingModels, setIsFetchingModels] = useState(false);
+    
+    const [providersInfo, setProvidersInfo] = useState<any[]>([]);
 
     const fetchAgents = () => {
         getAgents().then(setAgents).catch(console.error);
@@ -26,7 +28,15 @@ const AgentManagement = () => {
 
     useEffect(() => {
         fetchAgents();
+        // Fetch provider configs
+        axios.get(`${API_BASE}/providers`).then(res => {
+            if (res.data && res.data.providers) {
+                setProvidersInfo(res.data.providers);
+            }
+        }).catch(console.error);
     }, []);
+
+    const selectedProviderConfig = providersInfo.find(p => p.name === provider);
 
     // Reset when modal opens/closes
     useEffect(() => {
@@ -48,14 +58,14 @@ const AgentManagement = () => {
     useEffect(() => {
         if (showModal) {
             setTestResult(null);
-            if (provider.toLowerCase().includes('ollama')) {
-                setBaseUrl('http://localhost:11434');
+            if (selectedProviderConfig && selectedProviderConfig.default_base_url) {
+                setBaseUrl(selectedProviderConfig.default_base_url);
             } else {
                 setBaseUrl('');
             }
             handleFetchModels(provider, apiKey, baseUrl);
         }
-    }, [provider]);
+    }, [provider, selectedProviderConfig]);
     
     const handleFetchModels = async (prov: string, key: string, url: string) => {
         setIsFetchingModels(true);
@@ -186,36 +196,38 @@ const AgentManagement = () => {
                                 <div>
                                     <label className="block text-sm font-medium text-gray-300 mb-1">Provider</label>
                                     <select value={provider} onChange={e => setProvider(e.target.value)} className="w-full bg-gray-800 border border-gray-700 rounded-lg p-2.5 text-white outline-none focus:border-blue-500">
-                                        <option value="Google Gemini">Google Gemini</option>
-                                        <option value="OpenAI">OpenAI</option>
-                                        <option value="Anthropic">Anthropic</option>
-                                        <option value="Ollama">Ollama (Local)</option>
-                                        <option value="Custom OpenAI-Compatible">Custom OpenAI-Compatible</option>
+                                        {providersInfo.map((p: any) => (
+                                            <option key={p.id} value={p.name}>{p.name}</option>
+                                        ))}
+                                        {providersInfo.length === 0 && <option value="Google Gemini">Google Gemini</option>}
                                     </select>
                                 </div>
                             </div>
                             
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-300 mb-1">API Key (Optional for Local)</label>
-                                    <input value={apiKey} onChange={e => setApiKey(e.target.value)} type="password" placeholder="••••••••••••••••" className="w-full bg-gray-800 border border-gray-700 rounded-lg p-2.5 text-white outline-none focus:border-blue-500" />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-300 mb-1">Base URL (For Custom/Local)</label>
-                                    <input value={baseUrl} onChange={e => setBaseUrl(e.target.value)} type="text" placeholder="e.g. https://api.example.com/v1" className="w-full bg-gray-800 border border-gray-700 rounded-lg p-2.5 text-white outline-none focus:border-blue-500" />
-                                </div>
+                                {selectedProviderConfig?.requires_api_key && (
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-300 mb-1">API Key</label>
+                                        <input value={apiKey} onChange={e => setApiKey(e.target.value)} type="password" placeholder="••••••••••••••••" className="w-full bg-gray-800 border border-gray-700 rounded-lg p-2.5 text-white outline-none focus:border-blue-500" />
+                                    </div>
+                                )}
+                                {selectedProviderConfig?.requires_base_url && (
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-300 mb-1">Base URL</label>
+                                        <input value={baseUrl} onChange={e => setBaseUrl(e.target.value)} type="text" placeholder={selectedProviderConfig.default_base_url || "e.g. https://api.example.com/v1"} className="w-full bg-gray-800 border border-gray-700 rounded-lg p-2.5 text-white outline-none focus:border-blue-500" />
+                                    </div>
+                                )}
                             </div>
                             
                             <div className="flex gap-4 items-end bg-gray-800/50 p-4 rounded-lg border border-gray-700/50">
                                 <button type="button" onClick={handleTestConnection} disabled={isTesting} className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg font-medium transition-colors flex items-center gap-2 text-sm">
                                     {isTesting ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                                    Test Connection
+                                    Test Connection & Discover Models
                                 </button>
                                 {testResult && (
                                     <div className={`flex items-center gap-2 text-sm ${testResult.success ? 'text-green-400' : 'text-red-400'}`}>
                                         {testResult.success ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
                                         {testResult.message}
-                                        {testResult.latency && <span className="text-gray-500 ml-2">({testResult.latency.toFixed(2)}s)</span>}
                                     </div>
                                 )}
                             </div>
@@ -225,13 +237,16 @@ const AgentManagement = () => {
                                     Model Version
                                     {isFetchingModels && <Loader2 className="w-3 h-3 animate-spin text-blue-400" />}
                                 </label>
-                                <div className="flex gap-2">
+                                <div className="flex flex-col gap-2">
                                     {modelsList.length > 0 ? (
-                                        <select value={model} onChange={e => setModel(e.target.value)} className="flex-1 bg-gray-800 border border-gray-700 rounded-lg p-2.5 text-white outline-none focus:border-blue-500">
+                                        <select value={model} onChange={e => setModel(e.target.value)} className="w-full bg-gray-800 border border-gray-700 rounded-lg p-2.5 text-white outline-none focus:border-blue-500">
                                             {modelsList.map(m => <option key={m} value={m}>{m}</option>)}
                                         </select>
                                     ) : (
-                                        <input required value={model} onChange={e => setModel(e.target.value)} type="text" placeholder="e.g. gpt-4o or enter manually" className="flex-1 bg-gray-800 border border-gray-700 rounded-lg p-2.5 text-white outline-none focus:border-blue-500" />
+                                        <>
+                                            {testResult?.success === false && <p className="text-xs text-red-400">Unable to automatically retrieve models. You can enter a model manually.</p>}
+                                            <input required value={model} onChange={e => setModel(e.target.value)} type="text" placeholder="e.g. gpt-4o or enter manually" className="w-full bg-gray-800 border border-gray-700 rounded-lg p-2.5 text-white outline-none focus:border-blue-500" />
+                                        </>
                                     )}
                                 </div>
                             </div>
