@@ -147,13 +147,13 @@ const AgentManagement = () => {
     };
 
     const handleDeleteAgent = async (agentId: number) => {
-        if (!confirm("Are you sure you want to delete this agent? Note: Agents with execution history cannot be fully deleted to preserve analytics.")) return;
+        if (!confirm("Are you sure you want to PERMANENTLY delete this agent? This will completely wipe its execution history and analytics.")) return;
         try {
             await axios.delete(`${API_BASE}/agents/${agentId}`);
             fetchAgents();
         } catch (e) {
             console.error(e);
-            alert("Error deleting agent. It may have execution history.");
+            alert("Error deleting agent.");
         }
     };
 

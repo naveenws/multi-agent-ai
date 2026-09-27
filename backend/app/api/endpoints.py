@@ -331,10 +331,30 @@ def delete_agent(agent_id: int, session: Session = Depends(get_session)):
     if not db_agent:
         raise HTTPException(status_code=404, detail="Agent not found")
         
-    db_agent.is_active = False # Soft delete
-    session.add(db_agent)
+    # Delete capabilities
+    for cap in db_agent.capabilities:
+        session.delete(cap)
+        
+    # Delete executions and their children (evaluations, failures)
+    executions = session.exec(select(AgentExecution).where(AgentExecution.agent_id == agent_id)).all()
+    for ex in executions:
+        evals = session.exec(select(Evaluation).where(Evaluation.execution_id == ex.id)).all()
+        for ev in evals:
+            session.delete(ev)
+        fails = session.exec(select(AgentFailure).where(AgentFailure.execution_id == ex.id)).all()
+        for f in fails:
+            session.delete(f)
+        session.delete(ex)
+        
+    # Delete credential if exists
+    if db_agent.credential_id:
+        cred = session.get(AgentCredential, db_agent.credential_id)
+        if cred:
+            session.delete(cred)
+            
+    session.delete(db_agent)
     session.commit()
-    return {"message": "Agent disabled successfully"}
+    return {"message": "Agent and its history deleted permanently"}
 
 @router.post("/files/upload")
 async def upload_file(file: UploadFile = File(...)):
