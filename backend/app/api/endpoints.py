@@ -335,9 +335,12 @@ def delete_agent(agent_id: int, session: Session = Depends(get_session)):
         # Delete capabilities
         for cap in db_agent.capabilities:
             session.delete(cap)
+        session.flush()
             
         # Delete executions and their children (evaluations, failures)
         executions = session.exec(select(AgentExecution).where(AgentExecution.agent_id == agent_id)).all()
+        
+        # Step 1: Delete all dependent children first to prevent Postgres foreign key violations
         for ex in executions:
             evals = session.exec(select(Evaluation).where(Evaluation.execution_id == ex.id)).all()
             for ev in evals:
@@ -345,7 +348,14 @@ def delete_agent(agent_id: int, session: Session = Depends(get_session)):
             fails = session.exec(select(AgentFailure).where(AgentFailure.execution_id == ex.id)).all()
             for f in fails:
                 session.delete(f)
+        
+        session.flush() # Force physical deletion of children
+        
+        # Step 2: Delete executions now that their children are gone
+        for ex in executions:
             session.delete(ex)
+            
+        session.flush() # Force physical deletion of executions
             
         # Delete credential if exists
         if db_agent.credential_id:
