@@ -68,7 +68,10 @@ class OpenAIAdapter(BaseProvider):
         key = self.api_key or os.getenv("OPENAI_API_KEY")
         if not key:
             raise ValueError("No API key provided for OpenAI")
-        return openai.AsyncOpenAI(api_key=key, base_url=self.base_url)
+        
+        # Safely fallback to environment base URL if the DB base URL is missing
+        actual_base_url = self.base_url or os.getenv("OPENAI_BASE_URL")
+        return openai.AsyncOpenAI(api_key=key, base_url=actual_base_url)
 
     async def validate_credentials(self) -> bool:
         try:
