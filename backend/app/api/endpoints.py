@@ -357,13 +357,18 @@ def delete_agent(agent_id: int, session: Session = Depends(get_session)):
             
         session.flush() # Force physical deletion of executions
             
-        # Delete credential if exists
-        if db_agent.credential_id:
-            cred = session.get(AgentCredential, db_agent.credential_id)
+        credential_id_to_delete = db_agent.credential_id
+        
+        # Step 3: Delete the Agent itself
+        session.delete(db_agent)
+        session.flush() # Force Postgres to remove the agent row so it releases the foreign key on AgentCredential
+        
+        # Step 4: Delete the credential now that the agent doesn't reference it
+        if credential_id_to_delete:
+            cred = session.get(AgentCredential, credential_id_to_delete)
             if cred:
                 session.delete(cred)
                 
-        session.delete(db_agent)
         session.commit()
         return {"message": "Agent and its history deleted permanently"}
     except Exception as e:
