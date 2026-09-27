@@ -17,6 +17,15 @@ if DATABASE_URL.startswith("sqlite"):
 
 engine = create_engine(DATABASE_URL, echo=False, connect_args=connect_args)
 
+from sqlalchemy import event
+@event.listens_for(engine, "connect")
+def set_sqlite_pragma(dbapi_connection, connection_record):
+    if DATABASE_URL.startswith("sqlite"):
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA journal_mode=WAL")
+        cursor.execute("PRAGMA synchronous=NORMAL")
+        cursor.close()
+
 def create_db_and_tables():
     from app.models.core import User, AgentCredential, Agent, AgentCapability, Task, TaskStep, AgentExecution, Evaluation, AgentFailure, FinalResponse
     try:

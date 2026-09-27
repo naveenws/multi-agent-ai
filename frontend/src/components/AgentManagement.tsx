@@ -151,9 +151,9 @@ const AgentManagement = () => {
         try {
             await axios.delete(`${API_BASE}/agents/${agentId}`);
             fetchAgents();
-        } catch (e) {
+        } catch (e: any) {
             console.error(e);
-            alert("Error deleting agent.");
+            alert(e.response?.data?.detail || "Error deleting agent. The server might be deploying a new update, please wait 2 minutes and try again.");
         }
     };
 
